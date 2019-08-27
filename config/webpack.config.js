@@ -29,6 +29,9 @@ const eslint = require('eslint');
 
 const postcssNormalize = require('postcss-normalize');
 
+const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin');
+const filename = process.env.NODE_ENV;
+console.log(filename,'filename')
 const appPackageJson = require(paths.appPackageJson);
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
@@ -495,6 +498,10 @@ module.exports = function(webpackEnv) {
       ],
     },
     plugins: [
+      new webpack.DllReferencePlugin({
+        context: paths.appSrc,
+        manifest: require(`../public/vendor-manifest.${filename}.json`)
+      }),
       // Generates an `index.html` file with the <script> injected.
       new HtmlWebpackPlugin(
         Object.assign(
@@ -521,6 +528,15 @@ module.exports = function(webpackEnv) {
             : undefined
         )
       ),
+      new AddAssetHtmlPlugin([
+        {
+          //要添加到编译中的文件的绝对路径
+          filepath: path.resolve(__dirname, `../public/lib/react.${filename}.min.js,react-dom.${filename}.min.vendor.dll.js`),
+          outputPath: 'lib',
+          publicPath: 'lib',
+          includeSourcemap: false
+        }
+      ]),
       // Inlines the webpack runtime script. This script is too small to warrant
       // a network request.
       isEnvProduction &&
